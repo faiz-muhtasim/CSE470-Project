@@ -352,5 +352,168 @@
     </style>
 </head>
 <body>
+<div class="home-container">
+        <div class="grocery-container">
+            <div class="grocery-header">
+                <h1 class="grocery-title">My Grocery List</h1>
+                <a href="/home" class="add-btn">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Home
+                </a>
+            </div>
+            
+            <div class="grocery-form">
+                <form action="/grocery-list/add" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="itemName">Item Name</label>
+                            <input type="text" id="itemName" name="itemName" class="form-control" required placeholder="e.g., Apples">
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="text" id="quantity" name="quantity" class="form-control" placeholder="e.g., 2 kg">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="add-btn" style="width: 100%;">
+                                <span class="material-icons">add</span>
+                                Add Item
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="grocery-list">
+                <div class="list-header">
+                    <h2 class="list-title">Shopping Items</h2>
+                    <form action="/grocery-list/clear" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="clear-btn">
+                            <span class="material-icons">delete_sweep</span>
+                            Clear List
+                        </button>
+                    </form>
+                </div>
+                
+                <% if (activeList && activeList.items && activeList.items.length > 0) { %>
+                    <% activeList.items.forEach(item => { %>
+                        <div class="list-item <%= item.status === 'bought' ? 'bought' : '' %>">
+                            <div class="checkbox-wrapper">
+                                <form id="bought-form-<%= item._id %>" action="/grocery-list/update-status/<%= item._id %>" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <input type="hidden" name="status" value="<%= item.status === 'bought' ? 'pending' : 'bought' %>">
+                                    <input type="checkbox" class="item-checkbox" <%= item.status === 'bought' ? 'checked' : '' %> 
+                                           onchange="document.getElementById('bought-form-<%= item._id %>').submit()">
+                                </form>
+                            </div>
+                            
+                            <div class="item-info">
+                                <div class="item-name"><%= item.name %></div>
+                                <div class="item-quantity"><%= item.quantity %></div>
+                            </div>
+                            
+                            <div class="status-badge status-<%= item.status %>">
+                                <%= item.status === 'pending' ? 'To Buy' : 
+                                   item.status === 'bought' ? 'Bought' : 'Not Found' %>
+                            </div>
+                            
+                            <div class="item-actions">
+                                <% if (item.status !== 'bought' && item.status !== 'not-found') { %>
+                                    <form action="/grocery-list/update-status/<%= item._id %>" method="POST">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <input type="hidden" name="status" value="not-found">
+                                        <button type="submit" class="status-btn btn-not-found">Not Found</button>
+                                    </form>
+                                <% } %>
+                                
+                                <button class="action-btn edit-btn" onclick="openEditModal('<%= item._id %>', '<%= item.name %>', '<%= item.quantity %>')">
+                                    <span class="material-icons">edit</span>
+                                </button>
+                                
+                                <form action="/grocery-list/delete/<%= item._id %>" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="action-btn">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="empty-list">
+                        <span class="material-icons">shopping_cart</span>
+                        <p>Your grocery list is empty. Add some items above!</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="logout-container">
+            <form action="/logout" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="logout-btn">
+                    <span class="material-icons">exit_to_app</span>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Item Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Item</h3>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <form id="editForm" action="/grocery-list/update/" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="form-group">
+                    <label for="editItemName">Item Name</label>
+                    <input type="text" id="editItemName" name="itemName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editQuantity">Quantity</label>
+                    <input type="text" id="editQuantity" name="quantity" class="form-control">
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const modal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        
+        function openEditModal(itemId, itemName, quantity) {
+            // Set form values
+            document.getElementById('editItemName').value = itemName;
+            document.getElementById('editQuantity').value = quantity;
+            
+            // Set form action URL
+            editForm.action = `/grocery-list/update/${itemId}`;
+            
+            // Show modal
+            modal.style.display = 'flex';
+        }
+        
+        function closeEditModal() {
+            modal.style.display = 'none';
+        }
+        
+        // Close modal if clicked outside
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        }
+    </script>
 </body>
 </html>
