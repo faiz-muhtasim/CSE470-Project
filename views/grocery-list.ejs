@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Grocery List</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .grocery-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .grocery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .grocery-title {
+            font-size: 2rem;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .grocery-form {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .add-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .add-btn .material-icons {
+            margin-right: 0.5rem;
+        }
+        
+        .grocery-list {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e6f2ff;
+        }
+        
+        .list-title {
+            font-size: 1.5rem;
+            color: #2d3748;
+        }
+        
+        .clear-btn {
+            background: linear-gradient(135deg, #ff4d4d 0%, #f06767 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 103, 103, 0.4);
+        }
+        
+        .clear-btn .material-icons {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e6f2ff;
+            transition: all 0.3s;
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.25rem;
+        }
+        
+        .item-quantity {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background-color: #EBF5FF;
+            color: #3182CE;
+        }
+        
+        .status-bought {
+            background-color: #E6FFFA;
+            color: #38B2AC;
+        }
+        
+        .status-not-found {
+            background-color: #FFF5F5;
+            color: #E53E3E;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            background: #f2f5fa;
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #e2e8f0;
+        }
+        
+        .action-btn .material-icons {
+            font-size: 1.2rem;
+            color: #718096;
+        }
+        
+        .status-btn {
+            padding: 0.35rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-bought {
+            background-color: #E6FFFA;
+            color: #38B2AC;
+        }
+        
+        .btn-bought:hover {
+            background-color: #B2F5EA;
+        }
+        
+        .btn-not-found {
+            background-color: #FFF5F5;
+            color: #E53E3E;
+        }
+        
+        .btn-not-found:hover {
+            background-color: #FED7D7;
+        }
+        
+        .empty-list {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+        }
+        
+        .empty-list .material-icons {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2d3748;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #718096;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .cancel-btn {
+            background: #EDF2F7;
+            color: #4A5568;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Checkbox for marking items as bought */
+        .checkbox-wrapper {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .item-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #38B2AC;
+        }
+        
+        /* Line through for bought items */
+        .bought .item-name {
+            text-decoration: line-through;
+            color: #A0AEC0;
+        }
+        .logout-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+.add-btn {
+  text-decoration: none;
+}
+.logout-btn {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #ff4d4d 0%, #f06767 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.logout-btn .material-icons {
+    margin-right: 8px;
+}
+    </style>
+</head>
+<body>
+</body>
+</html>
