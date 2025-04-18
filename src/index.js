@@ -134,7 +134,94 @@ app.post("/login", async (req, res) => {
 });
 app.use(csrfProtection);
 
+app.use(csrfProtection);
 
+app.get('/calculate', async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Always calculate fresh metrics when loading the page
+    user.bmi = user.calculateBMI();
+    user.bmr = user.calculateBMR();
+    user.bodyFatPercentage = user.calculateBodyFat();
+    user.lastCalculated = new Date();
+    
+    res.render('calculate', { 
+      user: user,
+      bmiCategory: getBMICategory(user.bmi),
+      csrfToken: req.csrfToken() // Add CSRF token
+    });
+  } catch (error) {
+    console.error("Detailed error:", error);
+    res.status(500).render('error', { 
+      message: "Error calculating metrics",
+      error: error.message 
+    });
+  }
+});
+
+// Add this new route for updating metrics
+app.post('/update-metrics', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+
+    // Get all measurements from form
+    const newWeight = parseFloat(req.body.weight);
+    const newNeck = req.body.neck ? parseFloat(req.body.neck) : user.neck;
+    const newWaist = req.body.waist ? parseFloat(req.body.waist) : user.waist;
+    const newHip = req.body.hip ? parseFloat(req.body.hip) : user.hip;
+    
+    // Add current metrics to history before updating
+    user.weightHistory.push({
+      weight: user.weight,
+      neck: user.neck,
+      waist: user.waist,
+      hip: user.hip,
+      bmi: user.bmi,
+      bmr: user.bmr,
+      bodyFatPercentage: user.bodyFatPercentage,
+      date: new Date()
+    });
+
+    // Update all measurements
+    user.weight = newWeight;
+    user.neck = newNeck;
+    user.waist = newWaist;
+    if (user.gender === 'female') {
+      user.hip = newHip;
+    }
+
+    // Recalculate all metrics
+    user.bmi = user.calculateBMI();
+    user.bmr = user.calculateBMR();
+    user.bodyFatPercentage = user.calculateBodyFat();
+    user.lastCalculated = new Date();
+
+    await user.save();
+    
+    res.redirect('/calculate');
+  } catch (error) {
+    console.error("Update metrics error:", error);
+    res.status(500).render('error', {
+      message: "Error updating metrics",
+      error: error.message
+    });
+  }
+});
 
 
 
