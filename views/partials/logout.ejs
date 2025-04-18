@@ -1,0 +1,10 @@
+<% if (typeof showLogout === 'undefined' || showLogout !== false) { %>
+    <div class="logout-container">
+        <form action="/logout" method="POST">
+            <button type="submit" class="logout-btn">
+                <span class="material-icons">logout</span>
+                Logout
+            </button>
+        </form>
+    </div>
+<% } %>

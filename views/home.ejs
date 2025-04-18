@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Home</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="home-container">
+        <header class="app-header">
+            <h1>NutriTrack</h1>
+            <p>Your complete fitness companion</p>
+        </header>
+        
+        <main class="action-grid">
+            <a href="/calculate" class="action-card">
+                <div class="card-icon">
+                    <span class="material-icons">calculate</span>
+                </div>
+                <h2>Calculate Fitness</h2>
+                <p>Get your BMI, BMR and body fat analysis</p>
+            </a>
+            
+            <a href="/meal-plans" class="action-card">
+                <div class="card-icon">
+                    <span class="material-icons">restaurant</span>
+                </div>
+                <h2>Meal Plans</h2>
+                <p>Personalized nutrition plans</p>
+            </a>
+            
+            <a href="/grocery-list" class="action-card">
+                <div class="card-icon">
+                    <span class="material-icons">shopping_cart</span>
+                </div>
+                <h2>Grocery List</h2>
+                <p>Smart shopping lists for your meals</p>
+            </a>
+            
+            <a href="/track" class="action-card">
+                <div class="card-icon">
+                    <span class="material-icons">show_chart</span>
+                </div>
+                <h2>Log and Track</h2>
+                <p>Monitor your progress</p>
+            </a>
+        </main>
+    </div>
+    <%- include('partials/logout') %>
+</body>
+</html>

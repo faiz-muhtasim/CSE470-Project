@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Sign Up</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="signup-container">
+        <!-- Signup Form -->
+        <div class="signup-form-container">
+            <div class="form-header">
+                <h1 class="form-title">Create Your Account</h1>
+                <p class="form-subtitle">Let's get to know you better for personalized recommendations</p>
+            </div>
+
+            <form id="signupForm" class="auth-form" action="/signup" method="POST">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    <div class="form-group">
+                        <label for="name">Full Name*</label>
+                        <input type="text" id="name" name="name" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address*</label>
+                        <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    
+                    <!-- Password Section -->
+                    <div class="form-group">
+                        <label for="password">Password*</label>
+                        <input type="password" id="password" name="password" 
+                               placeholder="At least 8 characters" 
+                               minlength="8" required
+                               pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$">
+                        <small class="password-hint">
+                            Use 8+ characters with at least 1 letter, 1 number & 1 special character
+                        </small>
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                            <span class="strength-text">Password strength</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password*</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" 
+                               placeholder="Re-enter your password" required>
+                        <small class="error-message" id="passwordMatchError"></small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age*</label>
+                            <input type="number" id="age" name="age" min="12" max="120" placeholder="25" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender*</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body Measurements -->
+                <div class="form-section">
+                    <h3 class="section-title">Body Measurements</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="height">Height (cm)*</label>
+                            <input type="number" id="height" name="height" min="100" max="250" placeholder="175" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)*</label>
+                            <input type="number" id="weight" name="weight" min="30" max="300" step="0.1" placeholder="70.5" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="neck">Neck Circumference (cm)</label>
+                            <input type="number" id="neck" name="neck" min="20" max="60" step="0.1" placeholder="38.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="waist">Waist Circumference (cm)</label>
+                            <input type="number" id="waist" name="waist" min="50" max="200" step="0.1" placeholder="85.0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="hip">Hip Circumference (cm) - Women only</label>
+                        <input type="number" id="hip" name="hip" min="50" max="200" step="0.1" placeholder="95.0">
+                    </div>
+                </div>
+
+                <!-- Lifestyle Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Lifestyle Information</h3>
+                    <div class="form-group">
+                        <label for="profession">Profession/Occupation</label>
+                        <input type="text" id="profession" name="profession" placeholder="e.g., Software Developer">
+                    </div>
+                    <div class="form-group">
+                        <label for="activity">Daily Physical Activity Level*</label>
+                        <select id="activity" name="activity" required>
+                            <option value="">Select your activity level</option>
+                            <option value="sedentary">Sedentary (little or no exercise)</option>
+                            <option value="light">Lightly active (light exercise 1-3 days/week)</option>
+                            <option value="moderate">Moderately active (moderate exercise 3-5 days/week)</option>
+                            <option value="active">Very active (hard exercise 6-7 days/week)</option>
+                            <option value="extreme">Extremely active (very hard exercise & physical job)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="medical">Medical History (brief)</label>
+                        <textarea id="medical" name="medical" rows="3" placeholder="Any medical conditions, allergies, or injuries we should know about"></textarea>
+                    </div>
+                </div>
+
+                <!-- Terms and Submit -->
+                <div class="form-footer">
+                    <div class="terms-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms" class="terms-label">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>*</label>
+                    </div>
+                    <button type="submit" class="submit-btn">Create Account</button>
+                    <div class="login-link">
+                        Already have an account? <a href="/login">Log in</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Password validation
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const passwordMatchError = document.getElementById('passwordMatchError');
+        
+        function validatePassword() {
+            if (password.value !== confirmPassword.value) {
+                passwordMatchError.textContent = "Passwords don't match";
+                confirmPassword.setCustomValidity("Passwords don't match");
+            } else {
+                passwordMatchError.textContent = "";
+                confirmPassword.setCustomValidity('');
+            }
+        }
+        
+        password.addEventListener('input', validatePassword);
+        confirmPassword.addEventListener('input', validatePassword);
+        
+        // Password strength indicator
+        password.addEventListener('input', function() {
+            const strengthBar = document.querySelector('.strength-bar');
+            const strengthText = document.querySelector('.strength-text');
+            const strength = calculateStrength(this.value);
+            
+            strengthBar.style.width = strength.percentage + '%';
+            strengthBar.style.backgroundColor = strength.color;
+            strengthText.textContent = strength.text;
+        });
+        
+        function calculateStrength(password) {
+            let strength = 0;
+            // Length check
+            if (password.length >= 8) strength += 25;
+            if (password.length >= 12) strength += 15;
+            // Character diversity
+            if (/[A-Z]/.test(password)) strength += 15;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 15;
+            // Common patterns
+            if (!/(.)\1{2,}/.test(password)) strength += 15;
+            
+            strength = Math.min(strength, 100);
+            
+            if (strength < 40) return { percentage: strength, color: '#ff4d4d', text: 'Weak' };
+            if (strength < 70) return { percentage: strength, color: '#ffa500', text: 'Moderate' };
+            if (strength < 90) return { percentage: strength, color: '#5cb85c', text: 'Strong' };
+            return { percentage: strength, color: '#4CAF50', text: 'Very Strong' };
+        }
+    </script>
+</body>
+</html>
