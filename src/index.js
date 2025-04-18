@@ -240,14 +240,214 @@ app.post('/logout', (req, res) => {
         res.redirect('/');
     });
   });
-  function getBMICategory(bmi) {
-    if (bmi < 18.5) return "Underweight";
-    if (bmi < 25) return "Normal weight";
-    if (bmi < 30) return "Overweight";
-    return "Obese";
+ function getBMICategory(bmi) {
+  if (bmi < 18.5) return "Underweight";
+  if (bmi < 25) return "Normal weight";
+  if (bmi < 30) return "Overweight";
+  return "Obese";
+}
+
+// Grocery List Routes
+app.get('/grocery-list', async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
   }
 
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
 
+    // If user doesn't have any grocery list, create one
+    if (!user.groceryLists || user.groceryLists.length === 0) {
+      user.groceryLists = [{
+        name: "My Grocery List",
+        items: []
+      }];
+      await user.save();
+    }
+
+    res.render('grocery-list', {
+      user: user,
+      activeList: user.groceryLists[0],
+      csrfToken: req.csrfToken() // Add the csrfToken here
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render('error', {
+      message: "Error loading grocery list",
+      error: error.message
+    });
+  }
+});
+
+// Add item to grocery list
+app.post('/grocery-list/add', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const { itemName, quantity } = req.body;
+    
+    if (!itemName) {
+      return res.status(400).json({ error: "Item name is required" });
+    }
+    
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Ensure user has at least one grocery list
+    if (!user.groceryLists || user.groceryLists.length === 0) {
+      user.groceryLists = [{
+        name: "My Grocery List",
+        items: []
+      }];
+    }
+    
+    // Add item to first list (can be expanded to handle multiple lists)
+    user.groceryLists[0].items.push({
+      name: itemName,
+      quantity: quantity || "1",
+      status: 'pending'
+    });
+    
+    await user.save();
+    res.redirect('/grocery-list');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error adding item to grocery list" });
+  }
+});
+
+// Update item status
+app.post('/grocery-list/update-status/:itemId', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const { itemId } = req.params;
+    const { status } = req.body;
+    
+    if (!['pending', 'bought', 'not-found'].includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+    
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Find the item in the first list and update its status
+    const list = user.groceryLists[0];
+    const item = list.items.id(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    item.status = status;
+    await user.save();
+    
+    res.redirect('/grocery-list');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error updating item status" });
+  }
+});
+
+// Update item details
+app.post('/grocery-list/update/:itemId', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const { itemId } = req.params;
+    const { itemName, quantity } = req.body;
+    
+    if (!itemName) {
+      return res.status(400).json({ error: "Item name is required" });
+    }
+    
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Find and update the item
+    const list = user.groceryLists[0];
+    const item = list.items.id(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    item.name = itemName;
+    item.quantity = quantity || item.quantity;
+    
+    await user.save();
+    res.redirect('/grocery-list');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error updating item" });
+  }
+});
+
+// Delete item
+app.post('/grocery-list/delete/:itemId', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const { itemId } = req.params;
+    
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Find and remove the item
+    const list = user.groceryLists[0];
+    list.items = list.items.filter(item => item._id.toString() !== itemId);
+    
+    await user.save();
+    res.redirect('/grocery-list');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting item" });
+  }
+});
+
+// Clear entire grocery list
+app.post('/grocery-list/clear', csrfProtection, async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    // Clear all items from the first list
+    if (user.groceryLists && user.groceryLists.length > 0) {
+      user.groceryLists[0].items = [];
+    }
+    
+    await user.save();
+    res.redirect('/grocery-list');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error clearing grocery list" });
+  }
+});
 
 
 
