@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Fitness Metrics | NutriTrack</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .metrics-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 3rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .metric-card {
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            background: #f8fbff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 1.3rem;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .bmi-category {
+            font-size: 1.1rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .home-btn .material-icons {
+            margin-right: 8px;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .app-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .app-header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        .error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+    /* Logout Button Styles */
+    .logout-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+    }
+
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #ff4d4d 0%, #f06767 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    .logout-btn .material-icons {
+        margin-right: 8px;
+    }
+    .update-metrics {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.update-metrics h3 {
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.update-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.update-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+}
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <header class="app-header">
+            <h1>Your Fitness Metrics</h1>
+            <p>Calculated based on your profile data</p>
+        </header>
+        
+        <div class="metrics-container">
+            <!-- BMI Card -->
+            <!-- In the BMI card section -->
+            <div class="metric-card">
+                <div class="metric-value"><%= user.bmi.toFixed(1) %></div>
+                <div class="metric-label">Body Mass Index (BMI)</div>
+                <div class="bmi-category" style="background-color: 
+                    <%= bmiCategory === 'Underweight' ? '#ffc107' : 
+                    bmiCategory === 'Normal weight' ? '#28a745' : 
+                    bmiCategory === 'Overweight' ? '#fd7e14' : '#dc3545' %>">
+                    <%= bmiCategory %>
+                </div>
+<!-- -->
+<div class="update-metrics">
+    <h3>Update Your Metrics</h3>
+    <form action="/update-metrics" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        
+        <div class="form-group">
+            <label for="weight">Current Weight (kg)*</label>
+            <input type="number" id="weight" name="weight" 
+                   step="0.1" min="30" max="300" 
+                   value="<%= user.weight.toFixed(1) %>" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="neck">Neck Circumference (cm)</label>
+            <input type="number" id="neck" name="neck" 
+                   step="0.1" min="20" max="60" 
+                   value="<%= user.neck ? user.neck.toFixed(1) : '' %>">
+        </div>
+        
+        <div class="form-group">
+            <label for="waist">Waist Circumference (cm)</label>
+            <input type="number" id="waist" name="waist" 
+                   step="0.1" min="50" max="200" 
+                   value="<%= user.waist ? user.waist.toFixed(1) : '' %>">
+        </div>
+        
+        <% if (user.gender === 'female') { %>
+        <div class="form-group">
+            <label for="hip">Hip Circumference (cm)</label>
+            <input type="number" id="hip" name="hip" 
+                   step="0.1" min="50" max="200" 
+                   value="<%= user.hip ? user.hip.toFixed(1) : '' %>">
+        </div>
+        <% } %>
+        
+        <button type="submit" class="update-btn">
+            Update Metrics
+        </button>
+    </form>
+</div>
+                <!--  -->
+                <div class="bmi-advice">
+                    <% if (bmiCategory === 'Normal weight') { %>
+                        <p>You have a healthy body mass. Keep maintaining your current weight!</p>
+                    <% } else { 
+                        const idealWeight = 22 * Math.pow(user.height/100, 2); // 22 is considered ideal BMI
+                        const weightDifference = (bmiCategory === 'Underweight') 
+                            ? (idealWeight - user.weight).toFixed(1) 
+                            : (user.weight - idealWeight).toFixed(1);
+                    %>
+                        <p>Your ideal weight range should be around <strong><%= idealWeight.toFixed(1) %> kg</strong>.</p>
+                        <p>You should <%= bmiCategory === 'Underweight' ? 'gain' : 'lose' %> about 
+                        <strong><%= weightDifference %> kg</strong> to reach a healthy BMI.</p>
+                        <% if (bmiCategory === 'Underweight') { %>
+                            <p>Consider increasing your calorie intake with nutritious foods.</p>
+                        <% } else { %>
+                            <p>Consider a balanced diet and regular exercise to reach your goal.</p>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
+            
+            <!-- BMR Card -->
+            <div class="metric-card">
+                <div class="metric-value"><%= user.bmr.toFixed(0) %></div>
+                <div class="metric-label">Basal Metabolic Rate (BMR)</div>
+                <p>Calories your body needs at rest. If you take less calories daily, your weight will reduce. If more calories, weight will increase.</p>
+            </div>
+            
+            <!-- Body Fat Card -->
+            <% if (user.bodyFatPercentage) { %>
+            <div class="metric-card">
+                <div class="metric-value"><%= user.bodyFatPercentage.toFixed(1) %>%</div>
+                <div class="metric-label">Body Fat Percentage</div>
+                <p>Based on US Navy method</p>
+            </div>
+            <% } else { %>
+            <div class="metric-card">
+                <p>Body fat percentage couldn't be calculated. Please provide your neck, waist, 
+                   <%= user.gender === 'female' ? 'and hip ' : '' %>measurements in your profile.</p>
+            </div>
+            <% } %>
+            
+            <button onclick="window.location.href='/home'" class="home-btn">
+                <span class="material-icons">home</span>
+                Back to Home
+            </button>
+        </div>
+    </div>
+    <%- include('partials/logout') %>
+
+
+<div class="friend-calculator">
+    <h3>Calculate for a Friend</h3>
+    <form id="friendForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="friendGender">Gender</label>
+                <select id="friendGender" class="form-control" required>
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="friendAge">Age</label>
+                <input type="number" id="friendAge" min="12" max="120" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="friendHeight">Height (cm)</label>
+                <input type="number" id="friendHeight" min="100" max="250" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="friendWeight">Weight (kg)</label>
+                <input type="number" id="friendWeight" step="0.1" min="30" max="300" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="friendNeck">Neck (cm)</label>
+                <input type="number" id="friendNeck" step="0.1" min="20" max="60" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="friendWaist">Waist (cm)</label>
+                <input type="number" id="friendWaist" step="0.1" min="50" max="200" class="form-control">
+            </div>
+        </div>
+
+        <div class="form-group" id="friendHipContainer" style="display:none;">
+            <label for="friendHip">Hip (cm)</label>
+            <input type="number" id="friendHip" step="0.1" min="50" max="200" class="form-control">
+        </div>
+
+        <button type="button" class="calculate-btn" onclick="calculateForFriend()">
+            Calculate
+        </button>
+    </form>
+
+    <div id="friendResults" style="display:none; margin-top:20px;">
+        <div class="metric-card">
+            <div class="metric-value" id="friendBMI"></div>
+            <div class="metric-label">BMI</div>
+            <div class="bmi-category" id="friendBMICategory"></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="friendBMR"></div>
+            <div class="metric-label">BMR</div>
+            <p>Calories needed at rest</p>
+        </div>
+        <div class="metric-card" id="friendBodyFatCard" style="display:none;">
+            <div class="metric-value" id="friendBodyFat"></div>
+            <div class="metric-label">Body Fat %</div>
+            <p>Based on US Navy method</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.friend-calculator {
+    margin: 3rem auto; /* */
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    max-width: 800px; /**/
+    width: 90%; /*  */
+    display: flex;           /* Add this */
+    flex-direction: column;  /* Add this */
+    align-items: center;     /* Add this - centers items horizontally */
+    text-align: center; 
+}
+.calculate-btn {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.calculate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4);
+}
+</style>
+
+<script>
+// Show/hide hip measurement based on gender
+document.getElementById('friendGender').addEventListener('change', function() {
+    const hipContainer = document.getElementById('friendHipContainer');
+    hipContainer.style.display = this.value === 'female' ? 'block' : 'none';
+});
+
+function calculateForFriend() {
+    // Get input values
+    const gender = document.getElementById('friendGender').value;
+    const age = parseFloat(document.getElementById('friendAge').value);
+    const height = parseFloat(document.getElementById('friendHeight').value);
+    const weight = parseFloat(document.getElementById('friendWeight').value);
+    const neck = parseFloat(document.getElementById('friendNeck').value) || null;
+    const waist = parseFloat(document.getElementById('friendWaist').value) || null;
+    const hip = gender === 'female' ? (parseFloat(document.getElementById('friendHip').value) || null) : null;
+
+    // Calculate BMI
+    const bmi = weight / Math.pow(height / 100, 2);
+    document.getElementById('friendBMI').textContent = bmi.toFixed(1);
+    
+    // BMI Category
+    const bmiCategory = getBMICategory(bmi);
+    const bmiCategoryElement = document.getElementById('friendBMICategory');
+    bmiCategoryElement.textContent = bmiCategory;
+    bmiCategoryElement.style.backgroundColor = 
+        bmiCategory === 'Underweight' ? '#ffc107' :
+        bmiCategory === 'Normal weight' ? '#28a745' :
+        bmiCategory === 'Overweight' ? '#fd7e14' : '#dc3545';
+
+    // Calculate BMR (Mifflin-St Jeor Equation)
+    const bmr = gender === 'male' 
+        ? (10 * weight + 6.25 * height - 5 * age + 5)
+        : (10 * weight + 6.25 * height - 5 * age - 161);
+    document.getElementById('friendBMR').textContent = bmr.toFixed(0);
+
+    // Calculate Body Fat (if possible)
+    const bodyFatCard = document.getElementById('friendBodyFatCard');
+    if (neck && waist && (gender !== 'female' || hip)) {
+        const bodyFat = gender === 'male'
+            ? 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450
+            : 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(height)) - 450;
+        document.getElementById('friendBodyFat').textContent = bodyFat.toFixed(1) + '%';
+        bodyFatCard.style.display = 'block';
+    } else {
+        bodyFatCard.style.display = 'none';
+    }
+
+    // Show results
+    document.getElementById('friendResults').style.display = 'block';
+}
+
+function getBMICategory(bmi) {
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal weight";
+    if (bmi < 30) return "Overweight";
+    return "Obese";
+}
+</script>
+
+</body>
+</html>
