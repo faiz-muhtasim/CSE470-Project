@@ -575,6 +575,253 @@ app.post('/meal-plans/delete-meal/:planId/:mealId', csrfProtection, async (req, 
 });
 
   }
+  // Add recipe to meal
+app.post('/meal-plans/add-recipe/:planId/:mealId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, mealId } = req.params;
+        const { name, ingredients, instructions, preparationTime, servings } = req.body;
+        
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        const meal = mealPlan.meals.id(mealId);
+        
+        if (!meal) {
+            return res.status(404).json({ error: "Meal not found" });
+        }
+
+        // Process ingredients array
+        let processedIngredients = [];
+        if (Array.isArray(ingredients)) {
+            processedIngredients = ingredients.map(ing => ({
+                name: ing.name,
+                quantity: ing.quantity,
+                unit: ing.unit
+            }));
+        }
+
+        // Add the recipe
+        meal.recipes.push({
+            name,
+            ingredients: processedIngredients,
+            instructions: instructions.split('\n').filter(i => i.trim()),
+            preparationTime: Number(preparationTime),
+            servings: Number(servings)
+        });
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error('Error adding recipe:', error);
+        res.status(500).render('error', {
+            message: "Error adding recipe",
+            error: error.message,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    }
+});
+
+// Edit recipe
+app.post('/meal-plans/edit-recipe/:planId/:mealId/:recipeId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, mealId, recipeId } = req.params;
+        const { name, ingredients, instructions, preparationTime, servings } = req.body;
+        
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        const meal = mealPlan.meals.id(mealId);
+        const recipe = meal.recipes.id(recipeId);
+        
+        if (!recipe) {
+            return res.status(404).json({ error: "Recipe not found" });
+        }
+
+        // Process ingredients array
+        let processedIngredients = [];
+        if (Array.isArray(ingredients)) {
+            processedIngredients = ingredients.map(ing => ({
+                name: ing.name || '',
+                quantity: ing.quantity || '',
+                unit: ing.unit || ''
+            })).filter(ing => ing.name.trim() !== ''); // Remove empty ingredients
+        }
+
+        // Update recipe
+        recipe.name = name;
+        recipe.ingredients = processedIngredients;
+        recipe.instructions = instructions.split('\n').filter(i => i.trim());
+        recipe.preparationTime = Number(preparationTime);
+        recipe.servings = Number(servings);
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error('Error updating recipe:', error);
+        res.status(500).render('error', {
+            message: "Error updating recipe",
+            error: error.message,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    }
+});
+
+// Delete recipe
+app.post('/meal-plans/delete-recipe/:planId/:mealId/:recipeId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, mealId, recipeId } = req.params;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        const meal = mealPlan.meals.id(mealId);
+        
+        if (!meal) {
+            return res.status(404).json({ error: "Meal not found" });
+        }
+
+        // Remove the recipe
+        meal.recipes = meal.recipes.filter(recipe => recipe._id.toString() !== recipeId);
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error('Error deleting recipe:', error);
+        res.status(500).render('error', {
+            message: "Error deleting recipe",
+            error: error.message,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    }
+});
+
+// Add new meal plan
+app.post('/meal-plans/add', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { name, description } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ error: "Meal plan name is required" });
+        }
+
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Initialize mealPlans array if it doesn't exist
+        if (!user.mealPlans) {
+            user.mealPlans = [];
+        }
+
+        // Add new meal plan
+        user.mealPlans.push({
+            name,
+            description,
+            meals: []
+        });
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).render('error', {
+            message: "Error creating meal plan",
+            error: error.message,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    }
+});
+
+// Add route to delete meal plan
+app.post('/meal-plans/delete/:planId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId } = req.params;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Filter out the meal plan to delete
+        user.mealPlans = user.mealPlans.filter(plan => plan._id.toString() !== planId);
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error deleting meal plan" });
+    }
+});
+
+// Add route to edit meal plan
+app.post('/meal-plans/edit/:planId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId } = req.params;
+        const { name, description } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ error: "Meal plan name is required" });
+        }
+
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        if (!mealPlan) {
+            return res.status(404).json({ error: "Meal plan not found" });
+        }
+
+        mealPlan.name = name;
+        mealPlan.description = description;
+        mealPlan.updatedAt = new Date();
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error updating meal plan" });
+    }
+});
 });
 
 
