@@ -449,6 +449,131 @@ app.post('/grocery-list/clear', csrfProtection, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error clearing grocery list" });
+    // Meal Plans Routes
+
+// View meal plans
+app.get('/meal-plans', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        res.render('meal-plans', {
+            user: user,
+            mealPlans: user.mealPlans || [],
+            csrfToken: req.csrfToken(),
+            showLogout: true
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render('error', {
+            message: "Error loading meal plans",
+            error: error.message,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    }
+});
+
+// Add new meal
+app.post('/meal-plans/add-meal', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, name, type, calories } = req.body;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        if (!mealPlan) {
+            return res.status(404).json({ error: "Meal plan not found" });
+        }
+
+        mealPlan.meals.push({
+            name,
+            type,
+            calories: Number(calories),
+            recipes: []
+        });
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error adding meal" });
+    }
+});
+
+// Edit meal
+app.post('/meal-plans/edit-meal/:planId/:mealId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, mealId } = req.params;
+        const { name, type, calories } = req.body;
+        
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        const meal = mealPlan.meals.id(mealId);
+        
+        if (!meal) {
+            return res.status(404).json({ error: "Meal not found" });
+        }
+
+        meal.name = name;
+        meal.type = type;
+        meal.calories = Number(calories);
+        meal.updatedAt = new Date();
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error updating meal" });
+    }
+});
+
+// Delete meal
+app.post('/meal-plans/delete-meal/:planId/:mealId', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const { planId, mealId } = req.params;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const mealPlan = user.mealPlans.id(planId);
+        mealPlan.meals = mealPlan.meals.filter(meal => meal._id.toString() !== mealId);
+
+        await user.save();
+        res.redirect('/meal-plans');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error deleting meal" });
+    }
+});
+
   }
 });
 
