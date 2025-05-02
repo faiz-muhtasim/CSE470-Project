@@ -191,3 +191,220 @@
                                                                 </form>
                                                             </div>
                                                         </div>
+                                                        <!-- Edit Recipe Form -->
+                                                        <div id="edit-recipe-form-<%= recipe._id %>" class="recipe-form" style="display: none;">
+                                                            <form action="/meal-plans/edit-recipe/<%= plan._id %>/<%= meal._id %>/<%= recipe._id %>" method="POST">
+                                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                                
+                                                                <div class="form-group">
+                                                                    <label>Recipe Name</label>
+                                                                    <input type="text" name="name" value="<%= recipe.name || '' %>" required>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Ingredients</label>
+                                                                    <div id="edit-ingredients-list-<%= recipe._id %>" class="ingredients-list">
+                                                                        <% 
+                                                                        const ingredients = recipe.ingredients || [];
+                                                                        ingredients.forEach((ingredient, index) => { 
+                                                                            if (ingredient) { // Check if ingredient exists
+                                                                        %>
+                                                                            <div class="ingredient-item">
+                                                                                <input type="text" 
+                                                                                       name="ingredients[<%= index %>][name]" 
+                                                                                       value="<%= ingredient.name || '' %>" 
+                                                                                       placeholder="Ingredient name" 
+                                                                                       required>
+                                                                                <input type="text" 
+                                                                                       name="ingredients[<%= index %>][quantity]" 
+                                                                                       value="<%= ingredient.quantity || '' %>" 
+                                                                                       placeholder="Amount">
+                                                                                <input type="text" 
+                                                                                       name="ingredients[<%= index %>][unit]" 
+                                                                                       value="<%= ingredient.unit || '' %>" 
+                                                                                       placeholder="Unit">
+                                                                            </div>
+                                                                        <% 
+                                                                            }
+                                                                        }); 
+                                                                        %>
+                                                                        <!-- Add a default empty ingredient if no ingredients exist -->
+                                                                        <% if (!ingredients.length) { %>
+                                                                            <div class="ingredient-item">
+                                                                                <input type="text" 
+                                                                                       name="ingredients[0][name]" 
+                                                                                       placeholder="Ingredient name" 
+                                                                                       required>
+                                                                                <input type="text" 
+                                                                                       name="ingredients[0][quantity]" 
+                                                                                       placeholder="Amount">
+                                                                                <input type="text" 
+                                                                                       name="ingredients[0][unit]" 
+                                                                                       placeholder="Unit">
+                                                                            </div>
+                                                                        <% } %>
+                                                                    </div>
+                                                                    <button type="button" 
+                                                                            onclick="addIngredientToEdit('<%= recipe._id %>', <%= (recipe.ingredients || []).length %>)" 
+                                                                            class="btn-secondary">
+                                                                        <span class="material-icons">add</span>
+                                                                        Add Ingredient
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Instructions</label>
+                                                                    <textarea name="instructions" rows="4" required><%= (recipe.instructions || []).join('\n') %></textarea>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Preparation Time (minutes)</label>
+                                                                    <input type="number" name="preparationTime" value="<%= recipe.preparationTime || 0 %>" min="1" required>
+                                                                </div>
+
+                                                                <div class="form-group">
+                                                                    <label>Number of Servings</label>
+                                                                    <input type="number" name="servings" value="<%= recipe.servings || 1 %>" min="1" required>
+                                                                </div>
+
+                                                                <div class="form-actions">
+                                                                    <button type="submit" class="btn-primary">
+                                                                        <span class="material-icons">save</span>
+                                                                        Save Changes
+                                                                    </button>
+                                                                    <button type="button" 
+                                                                            onclick="toggleEditRecipe('<%= meal._id %>', '<%= recipe._id %>')" 
+                                                                            class="btn-secondary">
+                                                                        <span class="material-icons">close</span>
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+
+                                                        <!-- Recipe Display -->
+                                                        <div id="recipe-display-<%= recipe._id %>" class="recipe-display">
+                                                            <div class="recipe-details">
+                                                                <span>Prep Time: <%= recipe.preparationTime || 0 %> mins</span>
+                                                                <span>Servings: <%= recipe.servings || 1 %></span>
+                                                            </div>
+                                                            
+                                                            <% if (recipe.ingredients && recipe.ingredients.length > 0) { %>
+                                                                <div class="ingredients">
+                                                                    <h6>Ingredients:</h6>
+                                                                    <ul>
+                                                                        <% recipe.ingredients.forEach(ingredient => { %>
+                                                                            <% if (ingredient && ingredient.name) { %>
+                                                                                <li>
+                                                                                    <%= ingredient.quantity || '' %> 
+                                                                                    <%= ingredient.unit || '' %> 
+                                                                                    <%= ingredient.name %>
+                                                                                </li>
+                                                                            <% } %>
+                                                                        <% }); %>
+                                                                    </ul>
+                                                                </div>
+                                                            <% } %>
+
+                                                            <% if (recipe.instructions && recipe.instructions.length > 0) { %>
+                                                                <div class="instructions">
+                                                                    <h6>Instructions:</h6>
+                                                                    <ol>
+                                                                        <% recipe.instructions.forEach(instruction => { %>
+                                                                            <li><%= instruction %></li>
+                                                                        <% }); %>
+                                                                    </ol>
+                                                                </div>
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                <% }); %>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p class="no-plans">No meal plans yet. Create one to get started!</p>
+            <% } %>
+        </main>
+    </div>
+    <%- include('partials/logout') %>
+
+    <script>
+        let ingredientCounter = {};
+
+        function toggleEditPlan(planId) {
+            const form = document.getElementById(`edit-plan-form-${planId}`);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleEditMeal(planId, mealId) {
+            const form = document.getElementById(`edit-meal-form-${mealId}`);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleAddRecipe(mealId) {
+            const form = document.getElementById(`recipe-form-${mealId}`);
+            form.classList.toggle('active');
+        }
+
+        function addIngredientField(mealId) {
+            if (!ingredientCounter[mealId]) {
+                ingredientCounter[mealId] = 1;
+            }
+
+            const ingredientsList = document.getElementById(`ingredients-list-${mealId}`);
+            const newIngredient = document.createElement('div');
+            newIngredient.className = 'ingredient-item';
+            
+            const index = ingredientCounter[mealId];
+            newIngredient.innerHTML = `
+                <input type="text" name="ingredients[${index}][name]" placeholder="Ingredient name" required>
+                <input type="text" name="ingredients[${index}][quantity]" placeholder="Amount">
+                <input type="text" name="ingredients[${index}][unit]" placeholder="Unit">
+            `;
+            
+            ingredientsList.appendChild(newIngredient);
+            ingredientCounter[mealId]++;
+        }
+
+        function toggleEditRecipe(mealId, recipeId) {
+            const form = document.getElementById(`edit-recipe-form-${recipeId}`);
+            const display = document.getElementById(`recipe-display-${recipeId}`);
+            
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                display.style.display = 'none';
+            } else {
+                form.style.display = 'none';
+                display.style.display = 'block';
+            }
+        }
+
+        function addIngredientToEdit(recipeId, currentCount) {
+            const ingredientsList = document.getElementById(`edit-ingredients-list-${recipeId}`);
+            const newIngredient = document.createElement('div');
+            newIngredient.className = 'ingredient-item';
+            
+            newIngredient.innerHTML = `
+                <input type="text" 
+                       name="ingredients[${currentCount}][name]" 
+                       placeholder="Ingredient name" 
+                       required>
+                <input type="text" 
+                       name="ingredients[${currentCount}][quantity]" 
+                       placeholder="Amount">
+                <input type="text" 
+                       name="ingredients[${currentCount}][unit]" 
+                       placeholder="Unit">
+            `;
+            
+            ingredientsList.appendChild(newIngredient);
+        }
+    </script>
+</body>
+</html> 
