@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Meal Plans</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Add this navigation section -->
+        <div class="nav-section">
+            <a href="/home" class="btn-back">
+                <span class="material-icons">arrow_back</span>
+                Back to Home
+            </a>
+        </div>
+
+        <header class="app-header">
+            <h1>Meal Plans</h1>
+            <p>Manage your meals and recipes</p>
+        </header>
+
+        <main class="meal-plans-container">
+            <!-- Add New Meal Plan Button -->
+            <div class="add-plan-section">
+                <form action="/meal-plans/add" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="text" name="name" placeholder="New Meal Plan Name" required>
+                    <textarea name="description" placeholder="Description (optional)"></textarea>
+                    <button type="submit" class="btn-primary">Create New Meal Plan</button>
+                </form>
+            </div>
+
+            <!-- Existing Meal Plans -->
+            <% if (mealPlans && mealPlans.length > 0) { %>
+                <% mealPlans.forEach(plan => { %>
+                    <div class="meal-plan-card">
+                        <div class="meal-plan-header">
+                            <h2><%= plan.name %></h2>
+                            <p><%= plan.description %></p>
+                            <div class="meal-plan-actions">
+                                <button onclick="toggleEditPlan('<%= plan._id %>')" class="btn-edit">
+                                    <span class="material-icons">edit</span>
+                                </button>
+                                <form action="/meal-plans/delete/<%= plan._id %>" method="POST" class="inline-form">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this meal plan?')">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Edit Meal Plan Form (hidden by default) -->
+                        <div id="edit-plan-form-<%= plan._id %>" class="edit-plan-form" style="display: none;">
+                            <form action="/meal-plans/edit/<%= plan._id %>" method="POST">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <input type="text" name="name" value="<%= plan.name %>" required>
+                                <textarea name="description"><%= plan.description %></textarea>
+                                <button type="submit" class="btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Add Meal Form -->
+                        <form action="/meal-plans/add-meal" method="POST" class="add-meal-form">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <input type="hidden" name="planId" value="<%= plan._id %>">
+                            <input type="text" name="name" placeholder="Meal Name" required>
+                            <select name="type" required>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                            <input type="number" name="calories" placeholder="Calories">
+                            <button type="submit">Add Meal</button>
+                        </form>
+
+                        <!-- Meals List -->
+                        <div class="meals-list">
+                            <% plan.meals.forEach(meal => { %>
+                                <div class="meal-card">
+                                    <div class="meal-header">
+                                        <h3><%= meal.name %></h3>
+                                        <span class="meal-type"><%= meal.type %></span>
+                                        <% if (meal.calories) { %>
+                                            <span class="calories"><%= meal.calories %> cal</span>
+                                        <% } %>
+                                        <div class="meal-actions">
+                                            <button onclick="toggleEditMeal('<%= plan._id %>', '<%= meal._id %>')" class="btn-edit">
+                                                <span class="material-icons">edit</span>
+                                            </button>
+                                            <form action="/meal-plans/delete-meal/<%= plan._id %>/<%= meal._id %>" method="POST" class="inline-form">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this meal?')">
+                                                    <span class="material-icons">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- Edit Meal Form (hidden by default) -->
+                                    <div id="edit-meal-form-<%= meal._id %>" class="edit-meal-form" style="display: none;">
+                                        <form action="/meal-plans/edit-meal/<%= plan._id %>/<%= meal._id %>" method="POST">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                            <input type="text" name="name" value="<%= meal.name %>" required>
+                                            <select name="type" required>
+                                                <option value="breakfast" <%= meal.type === 'breakfast' ? 'selected' : '' %>>Breakfast</option>
+                                                <option value="lunch" <%= meal.type === 'lunch' ? 'selected' : '' %>>Lunch</option>
+                                                <option value="dinner" <%= meal.type === 'dinner' ? 'selected' : '' %>>Dinner</option>
+                                                <option value="snack" <%= meal.type === 'snack' ? 'selected' : '' %>>Snack</option>
+                                            </select>
+                                            <input type="number" name="calories" value="<%= meal.calories %>">
+                                            <button type="submit" class="btn-primary">Save Changes</button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Recipe Section -->
+                                    <div class="recipes-section">
+                                        <h4>Recipes</h4>
+                                        <button type="button" onclick="toggleAddRecipe('<%= meal._id %>')" class="btn-add-recipe">
+                                            <span class="material-icons">add</span>
+                                            Add Recipe
+                                        </button>
+
+                                        <!-- Recipe Form -->
+                                        <div id="recipe-form-<%= meal._id %>" class="recipe-form">
+                                            <form action="/meal-plans/add-recipe/<%= plan._id %>/<%= meal._id %>" method="POST">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                
+                                                <div class="form-group">
+                                                    <label for="recipe-name-<%= meal._id %>">Recipe Name</label>
+                                                    <input type="text" id="recipe-name-<%= meal._id %>" name="name" required>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label>Ingredients</label>
+                                                    <div id="ingredients-list-<%= meal._id %>" class="ingredients-list">
+                                                        <div class="ingredient-item">
+                                                            <input type="text" name="ingredients[0][name]" placeholder="Ingredient name" required>
+                                                            <input type="text" name="ingredients[0][quantity]" placeholder="Amount">
+                                                            <input type="text" name="ingredients[0][unit]" placeholder="Unit">
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" onclick="addIngredientField('<%= meal._id %>')" class="btn-secondary">
+                                                        <span class="material-icons">add</span>
+                                                        Add Ingredient
+                                                    </button>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="instructions-<%= meal._id %>">Instructions</label>
+                                                    <textarea id="instructions-<%= meal._id %>" name="instructions" rows="4" required></textarea>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="prep-time-<%= meal._id %>">Preparation Time (minutes)</label>
+                                                    <input type="number" id="prep-time-<%= meal._id %>" name="preparationTime" min="1" required>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="servings-<%= meal._id %>">Number of Servings</label>
+                                                    <input type="number" id="servings-<%= meal._id %>" name="servings" min="1" required>
+                                                </div>
+
+                                                <button type="submit" class="btn-primary">Save Recipe</button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Recipes List -->
+                                        <div class="recipes-list">
+                                            <% if (meal.recipes && meal.recipes.length > 0) { %>
+                                                <% meal.recipes.forEach(recipe => { %>
+                                                    <div class="recipe-card">
+                                                        <div class="recipe-header">
+                                                            <h5><%= recipe.name %></h5>
+                                                            <div class="recipe-actions">
+                                                                <button class="btn-edit" onclick="toggleEditRecipe('<%= meal._id %>', '<%= recipe._id %>')">
+                                                                    <span class="material-icons">edit</span>
+                                                                </button>
+                                                                <form action="/meal-plans/delete-recipe/<%= plan._id %>/<%= meal._id %>/<%= recipe._id %>" 
+                                                                      method="POST" 
+                                                                      class="inline-form"
+                                                                      onsubmit="return confirm('Are you sure you want to delete this recipe?')">
+                                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                                    <button type="submit" class="btn-delete">
+                                                                        <span class="material-icons">delete</span>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
