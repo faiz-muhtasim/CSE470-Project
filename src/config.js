@@ -105,6 +105,65 @@ const UserSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
+        }],
+
+    // Add this new section for meal plans
+    mealPlans: [{
+        name: {
+            type: String,
+            required: true
+        },
+        description: String,
+        meals: [{
+            name: {
+                type: String,
+                required: true
+            },
+            type: {
+                type: String,
+                enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+                required: true
+            },
+            calories: Number,
+            recipes: [{
+                name: {
+                    type: String,
+                    required: true
+                },
+                ingredients: [{
+                    name: String,
+                    quantity: String,
+                    unit: String
+                }],
+                instructions: [String],
+                preparationTime: Number,
+                servings: Number,
+                createdAt: {
+                    type: Date,
+                    default: Date.now
+                },
+                updatedAt: {
+                    type: Date,
+                    default: Date.now
+                }
+            }],
+            createdAt: {
+                type: Date,
+                default: Date.now
+            },
+            updatedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }],
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
 });
 // Calculation methods
