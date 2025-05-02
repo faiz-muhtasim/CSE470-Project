@@ -38,7 +38,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/success', (req, res) => {
-  res.render('success');
+    res.render('success', {
+    showLogout: true,
+    csrfToken: req.csrfToken()
+  });
 });
 
 app.get('/signup', (req, res) => {
