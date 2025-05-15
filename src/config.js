@@ -105,7 +105,7 @@ const UserSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
-        }],
+    }],
 
     // Add this new section for meal plans
     mealPlans: [{
@@ -164,7 +164,35 @@ const UserSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
-    }]
+    }],
+
+    // Add this to your UserSchema
+    gymStreak: [{
+        type: String,  // Store dates in 'YYYY-MM-DD' format
+        default: []
+    }],
+
+    // Add to UserSchema
+    waterIntake: {
+        target: {
+            type: Number,
+            default: 2000
+        },
+        history: [{
+            date: {
+                type: Date,
+                default: Date.now
+            },
+            amount: {
+                type: Number,
+                default: 0
+            },
+            target: {
+                type: Number,
+                default: 2000
+            }
+        }]
+    }
 });
 // Calculation methods
 UserSchema.methods.calculateBMI = function() {
