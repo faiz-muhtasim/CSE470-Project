@@ -10,7 +10,7 @@ const csrfProtection = csrf();
 
 const app = express();
 
-// Session middleware (only once, at the top)
+// Middleware setup
 app.use(session({
   store: MongoStore.create({ mongoUrl: 'mongodb://localhost:27017/NutriTrack' }),
   secret: 'your-secret-key',
@@ -22,15 +22,13 @@ app.use(session({
   }
 }));
 
-// Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.use(express.static("public"));
 app.use(flash());
 
-
-// Routes
+// Login routes BEFORE csrf protection
 app.get('/', (req, res) => {
   // Clear any existing session when showing login page
   req.session.destroy();
@@ -38,65 +36,82 @@ app.get('/', (req, res) => {
 });
 
 app.get('/success', (req, res) => {
-    res.render('success', {
+  res.render('success', {
     showLogout: true,
     csrfToken: req.csrfToken()
   });
 });
 
-app.get('/signup', (req, res) => {
-  res.render('signup', { showLogout: false });
+app.get('/signup', csrfProtection, (req, res) => {
+  res.render('signup', { 
+    error: null,
+    csrfToken: req.csrfToken()
+  });
 });
 
-app.get('/home', async (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
-  
+app.post('/signup', csrfProtection, async (req, res) => {
   try {
-    const user = await User.findById(req.session.userId);
-    if (!user) {
-      return res.redirect('/login');
+    const { 
+      username, 
+      email, 
+      password, 
+      confirmPassword, 
+      age, 
+      gender, 
+      height, 
+      weight, 
+      activityLevel, 
+      goal 
+    } = req.body;
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      return res.render('signup', { 
+        error: 'Passwords do not match',
+        csrfToken: req.csrfToken()
+      });
     }
-    
-    res.render('home', { user: user });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error loading home page");
-  }
-});
 
-app.post("/signup", async (req, res) => {
-  try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    
-    const newUser = new User({
-      name: req.body.name,
-      email: req.body.email,
-      password: hashedPassword,
-      age: req.body.age,
-      gender: req.body.gender,
-      height: req.body.height,
-      weight: req.body.weight,
-      neck: req.body.neck,
-      waist: req.body.waist,
-      hip: req.body.hip,
-      profession: req.body.profession,
-      activity: req.body.activity,
-      medical: req.body.medical,
-      termsAccepted: req.body.terms === 'on'
+    // Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.render('signup', { 
+        error: 'User already exists',
+        csrfToken: req.csrfToken()
+      });
+    }
+
+    // Create new user
+    const user = new User({
+      username,
+      email,
+      password, // This will be hashed by the pre-save middleware
+      age,
+      gender,
+      height,
+      weight,
+      activityLevel,
+      goal,
+      waterIntake: {
+        target: 2000, // Default water intake target
+        history: []
+      },
+      gymStreak: []
     });
-    
-    newUser.bmi = newUser.calculateBMI();
-    newUser.bmr = newUser.calculateBMR();
-    newUser.bodyFatPercentage = newUser.calculateBodyFat();
-    newUser.lastCalculated = new Date();
-    
-    await newUser.save();
-    res.redirect('/success');
+
+    await user.save();
+
+    // Set user session
+    req.session.userId = user._id;
+
+    // Redirect to home page
+    res.redirect('/');
   } catch (error) {
-    console.error(error);
-    res.status(500).render('signup', { error: "Error registering user" });
+    console.error('Error in signup:', error);
+    res.render('signup', { 
+      error: 'Error creating account',
+      csrfToken: req.csrfToken()
+    });
   }
 });
 
@@ -135,9 +150,32 @@ app.post("/login", async (req, res) => {
     });
   }
 });
+
+// Apply CSRF protection AFTER login routes
 app.use(csrfProtection);
 
-app.use(csrfProtection);
+// All other protected routes AFTER csrf protection
+app.get('/home', async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.redirect('/login');
+    }
+    
+    res.render('home', { 
+      user: user,
+      showLogout: true,
+      csrfToken: req.csrfToken()
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error loading home page");
+  }
+});
 
 app.get('/calculate', async (req, res) => {
   if (!req.session.userId) {
@@ -159,13 +197,16 @@ app.get('/calculate', async (req, res) => {
     res.render('calculate', { 
       user: user,
       bmiCategory: getBMICategory(user.bmi),
-      csrfToken: req.csrfToken() // Add CSRF token
+      csrfToken: req.csrfToken(),
+      showLogout: true
     });
   } catch (error) {
     console.error("Detailed error:", error);
     res.status(500).render('error', { 
       message: "Error calculating metrics",
-      error: error.message 
+      error: error.message,
+      showLogout: true,
+      csrfToken: req.csrfToken()
     });
   }
 });
@@ -221,29 +262,25 @@ app.post('/update-metrics', csrfProtection, async (req, res) => {
     console.error("Update metrics error:", error);
     res.status(500).render('error', {
       message: "Error updating metrics",
-      error: error.message
+      error: error.message,
+      csrfToken: req.csrfToken()
     });
   }
 });
 
-
-
-
-
-
-
 // Add this route to handle POST /logout
-app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error('Error destroying session:', err);
-            return res.redirect('/home');
-        }
-        res.clearCookie('connect.sid');
-        res.redirect('/');
-    });
+app.post('/logout', csrfProtection, (req, res) => {
+  req.session.destroy(err => {
+      if (err) {
+          console.error('Error destroying session:', err);
+          return res.redirect('/home');
+      }
+      res.clearCookie('connect.sid');
+      res.redirect('/');
   });
- function getBMICategory(bmi) {
+});
+
+function getBMICategory(bmi) {
   if (bmi < 18.5) return "Underweight";
   if (bmi < 25) return "Normal weight";
   if (bmi < 30) return "Overweight";
@@ -274,13 +311,16 @@ app.get('/grocery-list', async (req, res) => {
     res.render('grocery-list', {
       user: user,
       activeList: user.groceryLists[0],
-      csrfToken: req.csrfToken() // Add the csrfToken here
+      csrfToken: req.csrfToken(),
+      showLogout: true
     });
   } catch (error) {
     console.error(error);
     res.status(500).render('error', {
       message: "Error loading grocery list",
-      error: error.message
+      error: error.message,
+      showLogout: true,
+      csrfToken: req.csrfToken()
     });
   }
 });
@@ -449,7 +489,10 @@ app.post('/grocery-list/clear', csrfProtection, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error clearing grocery list" });
-    // Meal Plans Routes
+  }
+});
+
+// Meal Plans Routes
 
 // View meal plans
 app.get('/meal-plans', csrfProtection, async (req, res) => {
@@ -574,8 +617,7 @@ app.post('/meal-plans/delete-meal/:planId/:mealId', csrfProtection, async (req, 
     }
 });
 
-  }
-  // Add recipe to meal
+// Add recipe to meal
 app.post('/meal-plans/add-recipe/:planId/:mealId', csrfProtection, async (req, res) => {
     if (!req.session.userId) {
         return res.redirect('/login');
@@ -822,18 +864,122 @@ app.post('/meal-plans/edit/:planId', csrfProtection, async (req, res) => {
         res.status(500).json({ error: "Error updating meal plan" });
     }
 });
+
+// Track progress route
+app.get('/track', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Find today's water intake entry
+        const todayWaterIntake = user.waterIntake?.history?.find(entry => 
+            new Date(entry.date).toISOString().split('T')[0] === today
+        ) || { amount: 0 };
+
+        // Sort weight history by date
+        const sortedWeightHistory = [...(user.weightHistory || [])].sort((a, b) => 
+            new Date(a.date) - new Date(b.date)
+        );
+
+        // Sort water history by date
+        const sortedWaterHistory = [...(user.waterIntake?.history || [])].sort((a, b) => 
+            new Date(a.date) - new Date(b.date)
+        );
+
+        res.render('track', {
+            user: {
+                ...user.toObject(),
+                waterIntake: {
+                    ...user.waterIntake,
+                    currentAmount: todayWaterIntake.amount,
+                    history: sortedWaterHistory
+                }
+            },
+            weightHistory: sortedWeightHistory,
+            showLogout: true,
+            csrfToken: req.csrfToken()
+        });
+    } catch (error) {
+        console.error('Error in track route:', error);
+        res.status(500).send('Error loading tracking data');
+    }
 });
 
+// Update water intake route
+app.post('/track/water-intake', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
 
+    try {
+        const { amount, date, totalAmount } = req.body;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
+        // Find today's entry
+        const today = new Date(date);
+        const todayEntry = user.waterIntake.history.find(entry => 
+            new Date(entry.date).toISOString().split('T')[0] === date
+        );
 
+        if (todayEntry) {
+            // Update existing entry with total amount
+            todayEntry.amount = totalAmount;
+        } else {
+            // Create new entry
+            user.waterIntake.history.push({
+                date: today,
+                amount: totalAmount,
+                target: user.waterIntake.target
+            });
+        }
 
+        await user.save();
 
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving water intake:', error);
+        res.status(500).json({ success: false, message: 'Error saving water intake' });
+    }
+});
 
+// Update gym streak route
+app.post('/track/gym-streak', csrfProtection, async (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
 
+    try {
+        const { gymStreak } = req.body;
+        const user = await User.findById(req.session.userId);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
-  
-  const port = 3000;
+        user.gymStreak = gymStreak;
+        await user.save();
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving gym streak:', error);
+        res.status(500).json({ success: false, message: 'Error saving gym streak' });
+    }
+});
+
+const port = 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
