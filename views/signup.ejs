@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Sign Up</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="signup-container">
+        <!-- Signup Form -->
+        <div class="signup-form-container">
+            <div class="form-header">
+                <h1 class="form-title">Create Your Account</h1>
+                <p class="form-subtitle">Let's get to know you better for personalized recommendations</p>
+            </div>
+
+            <form id="signupForm" class="auth-form" action="/signup" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Personal Information</h3>
+                    <div class="form-group">
+                        <label for="age">Age:</label>
+                        <input type="number" id="age" name="age" min="1" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender:</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="height">Height (cm):</label>
+                        <input type="number" id="height" name="height" min="1" max="300" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight (kg):</label>
+                        <input type="number" id="weight" name="weight" min="1" max="500" required>
+                    </div>
+                </div>
+
+                <!-- Fitness Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Fitness Information</h3>
+                    <div class="form-group">
+                        <label for="activityLevel">Activity Level:</label>
+                        <select id="activityLevel" name="activityLevel" required>
+                            <option value="">Select Activity Level</option>
+                            <option value="sedentary">Sedentary</option>
+                            <option value="lightly_active">Lightly Active</option>
+                            <option value="moderately_active">Moderately Active</option>
+                            <option value="very_active">Very Active</option>
+                            <option value="extra_active">Extra Active</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="goal">Fitness Goal:</label>
+                        <select id="goal" name="goal" required>
+                            <option value="">Select Goal</option>
+                            <option value="lose_weight">Lose Weight</option>
+                            <option value="maintain_weight">Maintain Weight</option>
+                            <option value="gain_weight">Gain Weight</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Terms and Submit -->
+                <div class="form-footer">
+                    <div class="terms-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms" class="terms-label">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>*</label>
+                    </div>
+                    <button type="submit" class="submit-btn">Create Account</button>
+                    <div class="login-link">
+                        Already have an account? <a href="/login">Log in</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Password validation
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const passwordMatchError = document.getElementById('passwordMatchError');
+        
+        function validatePassword() {
+            if (password.value !== confirmPassword.value) {
+                passwordMatchError.textContent = "Passwords don't match";
+                confirmPassword.setCustomValidity("Passwords don't match");
+            } else {
+                passwordMatchError.textContent = "";
+                confirmPassword.setCustomValidity('');
+            }
+        }
+        
+        password.addEventListener('input', validatePassword);
+        confirmPassword.addEventListener('input', validatePassword);
+        
+        // Password strength indicator
+        password.addEventListener('input', function() {
+            const strengthBar = document.querySelector('.strength-bar');
+            const strengthText = document.querySelector('.strength-text');
+            const strength = calculateStrength(this.value);
+            
+            strengthBar.style.width = strength.percentage + '%';
+            strengthBar.style.backgroundColor = strength.color;
+            strengthText.textContent = strength.text;
+        });
+        
+        function calculateStrength(password) {
+            let strength = 0;
+            // Length check
+            if (password.length >= 8) strength += 25;
+            if (password.length >= 12) strength += 15;
+            // Character diversity
+            if (/[A-Z]/.test(password)) strength += 15;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 15;
+            // Common patterns
+            if (!/(.)\1{2,}/.test(password)) strength += 15;
+            
+            strength = Math.min(strength, 100);
+            
+            if (strength < 40) return { percentage: strength, color: '#ff4d4d', text: 'Weak' };
+            if (strength < 70) return { percentage: strength, color: '#ffa500', text: 'Moderate' };
+            if (strength < 90) return { percentage: strength, color: '#5cb85c', text: 'Strong' };
+            return { percentage: strength, color: '#4CAF50', text: 'Very Strong' };
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Basic validation
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // If validation passes, submit the form
+            this.submit();
+        });
+    </script>
+</body>
+</html>

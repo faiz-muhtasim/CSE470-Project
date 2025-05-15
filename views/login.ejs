@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Your Fitness Companion</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left Side - Features -->
+        <div class="features-side">
+            <div class="logo-large">NutriTrack</div>
+            <div class="tagline">Your complete fitness companion for tracking nutrition, planning meals, and achieving your health goals</div>
+            
+            <ul class="features-list">
+                <li>Personalized fitness calculations based on your body metrics</li>
+                <li>Smart meal suggestions tailored to your dietary needs</li>
+                <li>Automated grocery lists that match your meal plans</li>
+                <li>Comprehensive progress tracking with visual analytics</li>
+                <li>Integration with popular fitness devices and apps</li>
+            </ul>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-side">
+            <div class="login-header">
+                <h1 class="login-title">Welcome Back</h1>
+                <p class="login-subtitle">Sign in to continue your fitness journey</p>
+            </div>
+
+            <form class="login-form" action="/login" method="POST">
+                
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="error-message">
+                        <%= error %>
+                    </div>
+                <% } %>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" 
+                           value="<%= typeof email !== 'undefined' ? email : '' %>" 
+                           placeholder="Enter your email address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" 
+                           placeholder="Enter your password" required>
+                </div>
+                
+                <div class="options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="login-btn">Log In</button>
+                
+                <div class="signup-link">
+                    Don't have an account? <a href="/signup">Sign up now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
